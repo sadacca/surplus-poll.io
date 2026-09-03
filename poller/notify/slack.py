@@ -11,6 +11,7 @@ import requests
 
 from poller.models import Match
 from poller.notify import register
+from poller.notify.base import NotifyError
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,10 @@ class SlackNotifier:
             if i + MAX_MATCHES_PER_MESSAGE < len(matches):
                 self._sleep(BETWEEN_MESSAGE_DELAY_SECONDS)
 
+    def send_text(self, content: str) -> None:
+        """Send a plain-text message, for health/adapter-status alerts."""
+        self._post({"text": content})
+
     def _post(self, payload: dict) -> None:
         response = self.session.post(self.webhook_url, json=payload, timeout=(10, 30))
         if response.status_code == 429:
@@ -54,6 +59,7 @@ class SlackNotifier:
             logger.error(
                 "slack: webhook post failed with %d: %s", response.status_code, response.text
             )
+            raise NotifyError(f"slack webhook post failed with {response.status_code}")
 
 
 def _to_blocks(matches: list[Match]) -> list[dict]:

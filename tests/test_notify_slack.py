@@ -1,5 +1,6 @@
 import json
 
+import pytest
 import responses
 
 from poller.models import Listing, Match, Query
@@ -89,3 +90,23 @@ def test_factory_returns_notifier_when_env_var_set(monkeypatch):
     notifier = _build_from_env()
     assert notifier is not None
     assert notifier.webhook_url == WEBHOOK
+
+
+@responses.activate
+def test_permanent_failure_raises_notify_error():
+    from poller.notify.base import NotifyError
+
+    responses.add(responses.POST, WEBHOOK, status=500)
+    notifier = SlackNotifier(WEBHOOK)
+    with pytest.raises(NotifyError):
+        notifier.send([make_match("1")])
+
+
+@responses.activate
+def test_send_text_posts_text():
+    responses.add(responses.POST, WEBHOOK, status=200)
+    notifier = SlackNotifier(WEBHOOK)
+    notifier.send_text("adapter may be broken")
+
+    payload = json.loads(responses.calls[0].request.body)
+    assert payload == {"text": "adapter may be broken"}
