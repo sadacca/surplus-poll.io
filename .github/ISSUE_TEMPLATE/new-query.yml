@@ -1,0 +1,94 @@
+name: New search query
+description: Add a new search to queries.yaml (FR2) — files a PR for you, no laptop needed.
+title: "[new-query]: "
+labels: ["new-query"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill this in and submit. A workflow will parse it, append the
+        search to `queries.yaml`, open a PR, and comment here with the
+        PR link. See `docs/REQUIREMENTS.md` (FR1) for what each field means.
+
+  - type: input
+    id: label
+    attributes:
+      label: Label
+      description: Short human-readable name for this search.
+      placeholder: "Server GPUs"
+    validations:
+      required: true
+
+  - type: input
+    id: keywords
+    attributes:
+      label: Keywords
+      description: Comma-separated. A listing must match at least one.
+      placeholder: "nvidia, gpu, tesla"
+    validations:
+      required: true
+
+  - type: input
+    id: exclude_keywords
+    attributes:
+      label: Exclude keywords
+      description: Comma-separated. A listing matching any of these is dropped. Optional.
+      placeholder: "case, sleeve"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: sites
+    attributes:
+      label: Sites
+      options:
+        - label: PublicSurplus
+        - label: GovDeals
+    validations:
+      required: true
+
+  - type: input
+    id: max_price
+    attributes:
+      label: Max price (USD)
+      description: Optional.
+      placeholder: "500"
+    validations:
+      required: false
+
+  - type: input
+    id: state
+    attributes:
+      label: State
+      description: Two-letter state code. Optional.
+      placeholder: "CA"
+    validations:
+      required: false
+
+  - type: input
+    id: zip
+    attributes:
+      label: ZIP code
+      description: Optional.
+      placeholder: "94103"
+    validations:
+      required: false
+
+  - type: input
+    id: radius_miles
+    attributes:
+      label: Radius (miles)
+      description: Optional.
+      placeholder: "200"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: notify
+    attributes:
+      label: Notify
+      options:
+        - label: Discord
+        - label: Slack
+    validations:
+      required: true

@@ -1,0 +1,90 @@
+name: Add query from issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  add-query:
+    if: contains(github.event.issue.labels.*.name, 'new-query')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
+
+      - name: Install poller
+        run: pip install -e .
+
+      - name: Parse issue and append to queries.yaml
+        id: parse
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          set +e
+          result=$(printf '%s' "$ISSUE_BODY" | python scripts/issue_to_query.py queries.yaml)
+          code=$?
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          exit $code
+
+      - name: Comment parse error on the issue
+        if: steps.parse.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESULT: ${{ steps.parse.outputs.result }}
+        run: |
+          message="${RESULT#ERROR=}"
+          gh issue comment "${{ github.event.issue.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "Couldn't add this as a query: ${message}. Edit the issue and re-open it, or edit queries.yaml by hand."
+
+      - name: Open PR
+        if: success()
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          QUERY_ID: ${{ steps.parse.outputs.result }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          query_id="${QUERY_ID#QUERY_ID=}"
+          branch="add-query/${query_id}-${ISSUE_NUMBER}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add queries.yaml
+          git commit -m "Add query: ${query_id} (from issue #${ISSUE_NUMBER})"
+          git push -u origin "$branch"
+
+          printf 'Adds the `%s` query to `queries.yaml`, parsed from #%s.\n\nCloses #%s.\n' \
+            "$query_id" "$ISSUE_NUMBER" "$ISSUE_NUMBER" > /tmp/pr-body.md
+
+          pr_url=$(gh pr create \
+            --repo "${{ github.repository }}" \
+            --title "Add query: ${query_id}" \
+            --body-file /tmp/pr-body.md \
+            --head "$branch")
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on issue and close it
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" \
+            --repo "${{ github.repository }}" \
+            --body "Opened ${PR_URL} — merge it to activate this search."
+          gh issue close "$ISSUE_NUMBER" \
+            --repo "${{ github.repository }}"
