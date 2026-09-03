@@ -1,0 +1,9 @@
+queries:
+  - id: dup
+    label: "First"
+    sites: [publicsurplus]
+    keywords: ["gpu"]
+  - id: dup
+    label: "Second"
+    sites: [publicsurplus]
+    keywords: ["switch"]

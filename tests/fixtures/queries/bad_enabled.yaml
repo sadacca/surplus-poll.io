@@ -1,0 +1,6 @@
+queries:
+  - id: bad-enabled
+    label: "Bad enabled"
+    enabled: "yes"
+    sites: [publicsurplus]
+    keywords: ["gpu"]

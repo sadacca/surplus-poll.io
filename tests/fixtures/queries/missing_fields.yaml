@@ -1,0 +1,13 @@
+queries:
+  - label: "No id"
+    sites: [publicsurplus]
+    keywords: ["gpu"]
+  - id: no-label
+    sites: [publicsurplus]
+    keywords: ["gpu"]
+  - id: no-sites
+    label: "No sites"
+    keywords: ["gpu"]
+  - id: no-keywords
+    label: "No keywords"
+    sites: [publicsurplus]

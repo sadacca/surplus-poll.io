@@ -1,0 +1,6 @@
+queries:
+  - id: unknown-channel
+    label: "Unknown channel"
+    sites: [publicsurplus]
+    keywords: ["gpu"]
+    notify: [pagerduty]

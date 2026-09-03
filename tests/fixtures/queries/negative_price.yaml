@@ -1,0 +1,6 @@
+queries:
+  - id: negative-price
+    label: "Negative price"
+    sites: [publicsurplus]
+    keywords: ["gpu"]
+    max_price: -10

@@ -1,0 +1,5 @@
+queries:
+  - id: unknown-site
+    label: "Unknown site"
+    sites: [ebay]
+    keywords: ["gpu"]
