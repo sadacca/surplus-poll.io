@@ -10,7 +10,7 @@ These defaults are baked into the tasks below. Change the task set if any of the
 
 | Decision | Assumed |
 |---|---|
-| Poll frequency | Every 20 minutes (`*/20 * * * *`) |
+| Poll frequency | Once daily (`0 13 * * *`) — listings run 5-10 days, so 20 min was overkill |
 | State storage | Commit-back to repo, `state/seen.json` |
 | Notification channels | Discord required, Slack supported |
 | Sites for v1 | PublicSurplus + GovDeals |
@@ -218,7 +218,7 @@ These defaults are baked into the tasks below. Change the task set if any of the
 - **Depends on:** T17
 - **Deliverable:** scheduled workflow.
 - **Acceptance:**
-  - Triggers: `schedule` (`*/20 * * * *`) and `workflow_dispatch` with an optional `query_id` input to run a single query and a `dry_run` boolean.
+  - Triggers: `schedule` (`0 13 * * *`, once daily) and `workflow_dispatch` with an optional `query_id` input to run a single query and a `dry_run` boolean.
   - Pip dependencies cached with `actions/cache` keyed on the lockfile.
   - Webhook URLs passed only via `secrets.*` into env.
   - Job `timeout-minutes: 5`; a run against the starter `queries.yaml` completes in under 2 minutes (record the measured time in the PR).

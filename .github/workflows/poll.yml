@@ -2,9 +2,11 @@ name: Poll
 
 on:
   schedule:
-    # Every 20 minutes (FR8). GitHub Actions cron is best-effort and can
-    # slip a few minutes under load; that's fine for a 20-minute poll.
-    - cron: "*/20 * * * *"
+    # Once daily at 13:00 UTC (~6am Pacific / 9am Eastern). Listings run
+    # 5-10 days, so a 20-minute poll was overkill; daily is plenty and
+    # keeps the commit-back history readable. GitHub Actions cron is
+    # best-effort and can slip a few minutes under load.
+    - cron: "0 13 * * *"
   workflow_dispatch:
     inputs:
       query_id:

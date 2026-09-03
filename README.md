@@ -16,7 +16,8 @@ breakdown this project was built from: [`docs/TASKS.md`](docs/TASKS.md).
 ## How it works
 
 1. `queries.yaml` at the repo root defines your searches.
-2. Every 20 minutes (configurable), a GitHub Actions workflow runs
+2. Once a day (configurable — edit the `cron` line in
+   `.github/workflows/poll.yml`), a GitHub Actions workflow runs
    `python -m poller run`, which:
    - validates `queries.yaml`,
    - runs each enabled query against its configured sites,
