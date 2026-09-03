@@ -8,13 +8,12 @@ Runs on GitHub Actions — no server to maintain.
 Full requirements: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md). Task
 breakdown this project was built from: [`docs/TASKS.md`](docs/TASKS.md).
 
-> **Selector caveat.** `poller/adapters/publicsurplus.py` was written
-> without live access to the site and its selectors are still an unverified
-> guess. `poller/adapters/govdeals.py`'s card parsing *is* verified against
-> a real captured page, but its query support is narrower than it looks:
-> there's no confirmed keyword-search URL, so it can only browse a known
-> `category` page and filter client-side — see that module's docstring.
-> Before the first real run, follow **Verifying the adapters** below.
+> **Selector caveat.** Both adapters' card parsing is now verified against
+> real captured pages, but each has a gap: PublicSurplus's `category`
+> filter isn't wired up (categories are numeric IDs there and none has
+> been captured yet), and GovDeals has no confirmed keyword-search URL, so
+> it can only browse a known `category` page and filter client-side. See
+> **Verifying the adapters** below and each module's docstring.
 
 ## How it works
 
@@ -52,44 +51,48 @@ channel rather than failing the run.
 
 ### 2. Verifying the adapters
 
-**PublicSurplus** was written against a best-effort guess at the site's
-search-results markup — nothing about it has been confirmed against a real
-page yet. Before relying on it:
+Both adapters' selectors are now confirmed against real captured pages
+(2026-09-03), not guesses — but each has an open gap. A quick sanity check
+either way:
 
 ```bash
 pip install -r requirements.txt
-python -m poller search publicsurplus "nvidia"
+python -m poller search publicsurplus "dell optiplex"
+python -m poller search govdeals "ergotron" --category "Computer Equipment"
 ```
 
-This prints `listing_id  price  title  url` for whatever it parsed. If it
-prints nothing (or wrong-looking data) but the site clearly has results for
-that keyword in a browser, the selectors need updating:
+This prints `listing_id  price  title  url` for whatever it parsed. If a
+result looks wrong, or the site's markup has since changed: save the HTML
+of a real results page (browser → Save As → Webpage/MHTML is fine),
+compare it to the constants near the top of the relevant
+`poller/adapters/<site>.py`, update the selectors/URL builder to match,
+and update the fixture at `tests/fixtures/<site>/search_results.html`
+(then re-run `pytest`) so the tests keep covering the real structure.
 
-1. Save the HTML of a real search-results page (browser → Save As →
-   Webpage/MHTML is fine).
-2. Compare it to the `_ROW_SELECTOR` / `_TITLE_SELECTOR` / etc. constants
-   near the top of `poller/adapters/publicsurplus.py`.
-3. Update the selectors and `build_search_url()` to match, and update the
-   fixture at `tests/fixtures/publicsurplus/search_results.html` (and
-   re-run `pytest`) so the tests keep covering the real structure.
+**PublicSurplus** search lives on the mobile subdomain
+(`m.publicsurplus.com/sms/browse/search`) with real, confirmed query
+params — `keyWord`, 0-indexed `page`, and `zipCode`/`milesLocation`
+matching `Query.zip`/`radius_miles` directly. `state` isn't a URL param;
+it's filtered client-side against each listing's scraped location.
+`category` isn't wired up: PublicSurplus categories are numeric IDs
+(`catId`) and none has been captured yet, so `catId=-1` (all categories)
+is always sent regardless of what a query's `category` says. Pagination
+past page 0 is unconfirmed.
 
-**GovDeals** is server-rendered (Angular Universal — confirmed, no headless
-browser needed, satisfying FR6) and its card parsing has been verified
-against a real captured category page, so listings it returns should be
-trustworthy. What it *can't* do yet: there is no confirmed keyword-search
-URL — a query must set a `category` that's mapped in
-`poller/adapters/govdeals.py`'s `_CATEGORY_SLUGS` (currently just
+**GovDeals** is server-rendered (Angular Universal — confirmed, no
+headless browser needed, satisfying FR6). There is no confirmed
+keyword-search URL, though — a query must set a `category` that's mapped
+in `poller/adapters/govdeals.py`'s `_CATEGORY_SLUGS` (currently just
 `"Computer Equipment"` → `computers-parts-supplies`), and the adapter
 browses that category page and filters by `keywords`/`exclude_keywords`
-client-side rather than searching. A GovDeals query with no mapped category
-fails clearly with a `SiteError` (logged, doesn't abort the run) rather
-than guessing another URL. Pagination past the first page is also
+client-side rather than searching. A GovDeals query with no mapped
+category fails clearly with a `SiteError` (logged, doesn't abort the run)
+rather than guessing another URL. Pagination past the first page is also
 unconfirmed (`DEFAULT_PAGE_CAP = 1` until that's verified).
 
-To extend this — map another category, or confirm a real search/pagination
-URL — capture another page the same way (browser → search or browse →
-Save As → Webpage, Single File / MHTML) and update `_CATEGORY_SLUGS` and
-the module docstring in `poller/adapters/govdeals.py`.
+To close either gap — a real category ID for PublicSurplus, a real
+keyword-search or page-2 URL for GovDeals — capture another page the same
+way and update the relevant module's docstring and constants.
 
 ### 3. First run
 
