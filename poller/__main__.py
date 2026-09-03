@@ -7,6 +7,7 @@ import argparse
 import dataclasses
 import logging
 import sys
+import time
 from collections import defaultdict
 
 from poller.adapters import ADAPTERS, register_builtin_adapters
@@ -86,6 +87,7 @@ def cmd_search(args: argparse.Namespace) -> int:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
+    started_at = time.monotonic()
     bootstrap()
 
     try:
@@ -196,6 +198,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         seen_store.save()
 
     health.save()
+    summary.duration_seconds = time.monotonic() - started_at
     summary.log(logger)
     return EXIT_OK
 
