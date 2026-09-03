@@ -1,8 +1,8 @@
 {
   "sites": {
     "govdeals": {
-      "alerted": false,
-      "consecutive_failures": 2
+      "alerted": true,
+      "consecutive_failures": 3
     }
   }
 }
