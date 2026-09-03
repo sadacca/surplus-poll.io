@@ -1,0 +1,35 @@
+# Surplus hardware poller — search config.
+# Schema and validation rules: see docs/REQUIREMENTS.md (FR1, FR3) and
+# poller/config.py. Run `python -m poller validate` after editing this file.
+
+queries:
+  - id: gpu-search
+    label: "Server GPUs"
+    enabled: true
+    sites: [publicsurplus, govdeals]
+    keywords: ["nvidia", "gpu", "tesla"]
+    exclude_keywords: ["case", "sleeve"]
+    category: "Computer Equipment"
+    max_price: 500
+    state: "CA"
+    zip: "94103"
+    radius_miles: 200
+    notify: [discord]
+
+  - id: rack-switches
+    label: "10G Switches"
+    enabled: false
+    sites: [publicsurplus]
+    keywords: ["switch", "10gbe", "sfp+"]
+    max_price: 150
+    notify: [discord, slack]
+
+  - id: servers
+    label: "Rack Servers"
+    enabled: false
+    sites: [publicsurplus, govdeals]
+    keywords: ["server", "poweredge", "proliant"]
+    exclude_keywords: ["parts only", "no hard drives"]
+    category: "Computer Equipment"
+    max_price: 300
+    notify: [discord]

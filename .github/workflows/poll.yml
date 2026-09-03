@@ -1,0 +1,67 @@
+name: Poll
+
+on:
+  schedule:
+    # Every 20 minutes (FR8). GitHub Actions cron is best-effort and can
+    # slip a few minutes under load; that's fine for a 20-minute poll.
+    - cron: "*/20 * * * *"
+  workflow_dispatch:
+    inputs:
+      query_id:
+        description: "Run only this query id (useful for testing a new query immediately)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Search and log matches without notifying or writing state"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: poll-run
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run poller
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          args=(run)
+          if [ -n "${{ inputs.query_id }}" ]; then
+            args+=(--query-id "${{ inputs.query_id }}")
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          python -m poller "${args[@]}"
+
+      - name: Commit state if changed
+        run: |
+          git add state/
+          if git diff --cached --quiet; then
+            echo "no state changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(state): update seen listings [skip ci]"
+          git push
