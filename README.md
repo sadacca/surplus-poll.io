@@ -91,7 +91,17 @@ Locally, the equivalent is:
 python -m poller run --query-id gpu-search --dry-run
 ```
 
-## Adding or editing a query
+## Adding a query from your phone
+
+File a new issue using the **New search query** template (auto-tagged
+`new-query`). A workflow parses it, appends the entry to `queries.yaml`,
+opens a PR, comments on the issue with the PR link, and closes the issue.
+Merge the PR to activate the search — no laptop or YAML editing required.
+If the form doesn't parse (e.g. a required field left blank), the workflow
+comments the specific problem on the issue instead of opening a PR, and
+`queries.yaml` is left untouched.
+
+## Adding or editing a query by hand
 
 Edit `queries.yaml` at the repo root. Each query:
 
@@ -172,7 +182,6 @@ mocked HTTP layer, and the notifier tests mock the webhook endpoint.
 
 ## Not in this repo yet
 
-The requirements describe two stretch features not implemented here:
-mobile query curation via a GitHub Issue Form (`docs/REQUIREMENTS.md`
-FR2), and watchlist mode for price/bid-change alerts on pinned listings
-(FR13). Both are scoped as milestone M3 in `docs/TASKS.md`.
+Watchlist mode — price/bid-change alerts on pinned listings, separate from
+the new-listing alert (`docs/REQUIREMENTS.md` FR13) — is not implemented.
+It's scoped as the rest of milestone M3 in `docs/TASKS.md`.
