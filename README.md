@@ -8,10 +8,13 @@ Runs on GitHub Actions — no server to maintain.
 Full requirements: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md). Task
 breakdown this project was built from: [`docs/TASKS.md`](docs/TASKS.md).
 
-> **Selector caveat.** The two site adapters (`poller/adapters/publicsurplus.py`,
-> `poller/adapters/govdeals.py`) were written without live access to either
-> site — see the module docstrings for why and what to verify. Before the
-> first real run, follow **Verifying the adapters** below.
+> **Selector caveat.** `poller/adapters/publicsurplus.py` was written
+> without live access to the site and its selectors are still an unverified
+> guess. `poller/adapters/govdeals.py`'s card parsing *is* verified against
+> a real captured page, but its query support is narrower than it looks:
+> there's no confirmed keyword-search URL, so it can only browse a known
+> `category` page and filter client-side — see that module's docstring.
+> Before the first real run, follow **Verifying the adapters** below.
 
 ## How it works
 
@@ -49,31 +52,44 @@ channel rather than failing the run.
 
 ### 2. Verifying the adapters
 
-This project's adapters were written against a best-effort guess at each
-site's search-results markup — see the caveat at the top of this file. Before
-relying on them:
+**PublicSurplus** was written against a best-effort guess at the site's
+search-results markup — nothing about it has been confirmed against a real
+page yet. Before relying on it:
 
 ```bash
 pip install -r requirements.txt
 python -m poller search publicsurplus "nvidia"
-python -m poller search govdeals "nvidia"
 ```
 
-Each command prints `listing_id  price  title  url` for whatever it parsed.
-If it prints nothing (or wrong-looking data) but the site clearly has
-results for that keyword in a browser, the selectors need updating:
+This prints `listing_id  price  title  url` for whatever it parsed. If it
+prints nothing (or wrong-looking data) but the site clearly has results for
+that keyword in a browser, the selectors need updating:
 
-1. Save the HTML of a real search-results page for that site.
+1. Save the HTML of a real search-results page (browser → Save As →
+   Webpage/MHTML is fine).
 2. Compare it to the `_ROW_SELECTOR` / `_TITLE_SELECTOR` / etc. constants
-   near the top of `poller/adapters/<site>.py`.
+   near the top of `poller/adapters/publicsurplus.py`.
 3. Update the selectors and `build_search_url()` to match, and update the
-   fixture at `tests/fixtures/<site>/search_results.html` (and re-run
-   `pytest`) so the tests keep covering the real structure.
+   fixture at `tests/fixtures/publicsurplus/search_results.html` (and
+   re-run `pytest`) so the tests keep covering the real structure.
 
-For GovDeals specifically, also confirm the search results are still
-server-rendered HTML (no JavaScript required) — if not, this
-`requests` + `BeautifulSoup` approach won't work for it and it should be
-dropped from `sites:` in your queries until a different approach is added.
+**GovDeals** is server-rendered (Angular Universal — confirmed, no headless
+browser needed, satisfying FR6) and its card parsing has been verified
+against a real captured category page, so listings it returns should be
+trustworthy. What it *can't* do yet: there is no confirmed keyword-search
+URL — a query must set a `category` that's mapped in
+`poller/adapters/govdeals.py`'s `_CATEGORY_SLUGS` (currently just
+`"Computer Equipment"` → `computers-parts-supplies`), and the adapter
+browses that category page and filters by `keywords`/`exclude_keywords`
+client-side rather than searching. A GovDeals query with no mapped category
+fails clearly with a `SiteError` (logged, doesn't abort the run) rather
+than guessing another URL. Pagination past the first page is also
+unconfirmed (`DEFAULT_PAGE_CAP = 1` until that's verified).
+
+To extend this — map another category, or confirm a real search/pagination
+URL — capture another page the same way (browser → search or browse →
+Save As → Webpage, Single File / MHTML) and update `_CATEGORY_SLUGS` and
+the module docstring in `poller/adapters/govdeals.py`.
 
 ### 3. First run
 

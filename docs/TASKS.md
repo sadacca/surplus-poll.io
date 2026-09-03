@@ -297,6 +297,7 @@ These defaults are baked into the tasks below. Change the task set if any of the
 
 ## Risks to spike early
 
-- **GovDeals markup.** Verify the search page is server-rendered before committing to T11; this is the biggest unknown and decides whether GovDeals stays in v1.
+- **GovDeals markup — resolved for card parsing, open for search.** Verified 2026-09-03 against a real captured category page: it's server-rendered (Angular Universal, no headless browser needed) and the card selectors in `poller/adapters/govdeals.py` are real, not guessed. Still open: there is no confirmed keyword-search URL (a prior guess 403'd in production), so the adapter only browses a known `category` page and filters client-side — see that module's docstring for how to extend the category mapping or confirm a real search/pagination URL.
+- **PublicSurplus markup — still unverified.** Unlike GovDeals, no real page has been captured for this site yet; its selectors are still a guess. See README "Verifying the adapters."
 - **Location filtering.** Neither site may support zip + radius natively; the tasks assume state filtering server-side and radius client-side via a small zip centroid table, which is extra scope if required.
-- **Commit-back churn.** One commit per 20-minute run is ~72 commits/day. Acceptable for a personal repo but noted; the `[skip ci]` marker and pruning in T12 keep it manageable.
+- **Commit-back churn.** Daily runs keep this to one commit/day at most; the `[skip ci]` marker and pruning in T12 keep it manageable either way.

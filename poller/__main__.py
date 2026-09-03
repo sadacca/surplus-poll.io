@@ -73,6 +73,7 @@ def cmd_search(args: argparse.Namespace) -> int:
         enabled=True,
         sites=(args.site,),
         keywords=tuple(args.keywords),
+        category=args.category,
     )
     try:
         listings = adapter.search(query)
@@ -224,6 +225,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     search_p.add_argument("site", choices=list(KNOWN_SITES))
     search_p.add_argument("keywords", nargs="+")
+    search_p.add_argument(
+        "--category",
+        default=None,
+        help="required for govdeals (a category-browse page, not a keyword search API); "
+        "e.g. 'Computer Equipment'",
+    )
     search_p.set_defaults(func=cmd_search)
 
     return parser
