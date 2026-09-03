@@ -18,7 +18,10 @@ def register_builtin_adapters(clients: dict[str, RateLimitedClient]) -> None:
     `clients` maps site name -> RateLimitedClient, so each adapter gets its
     own rate limiter (FR7). Called once at process startup by poller.__main__.
     """
+    from poller.adapters.govdeals import GovDealsAdapter
     from poller.adapters.publicsurplus import PublicSurplusAdapter
 
     if "publicsurplus" in clients:
         register(PublicSurplusAdapter(clients["publicsurplus"]))
+    if "govdeals" in clients:
+        register(GovDealsAdapter(clients["govdeals"]))
