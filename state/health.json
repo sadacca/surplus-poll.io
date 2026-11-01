@@ -2,7 +2,7 @@
   "sites": {
     "govdeals": {
       "alerted": true,
-      "consecutive_failures": 61
+      "consecutive_failures": 62
     }
   }
 }
